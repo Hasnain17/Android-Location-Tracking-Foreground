@@ -8,7 +8,9 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -51,7 +53,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String UPDATE_LOCATION_ACTION = "com.app.android.work_manager.UPDATE_LOCATION_ACTION";
 
-    private boolean timerRunning = false;
+    private Handler handler;
+    private boolean isTimerRunning;
+    private int seconds;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
         btnStopTracking = findViewById(R.id.btnStopTracking);
         tvTime = findViewById(R.id.tvTime);
         tvKm = findViewById(R.id.tvKm);
+
+        handler = new Handler(Looper.getMainLooper());
 
         btnStartTracking.setOnClickListener(view -> startTracking());
 
@@ -157,6 +164,37 @@ public class MainActivity extends AppCompatActivity {
         // Stop the timer, update text views
         stopTimer();
     }
+    private void startTimer() {
+        if (!isTimerRunning) {
+            isTimerRunning = true;
+            seconds = 0;
+            updateTimerText();
+
+            handler.postDelayed(timerRunnable, 1000);
+        }
+    }
+    private void stopTimer() {
+        if (isTimerRunning) {
+            isTimerRunning = false;
+            handler.removeCallbacks(timerRunnable);
+        }
+    }
+    private void updateTimerText() {
+        int minutes = seconds / 60;
+        int remainingSeconds = seconds % 60;
+        tvTime.setText(String.format("Time: %02d:%02d", minutes, remainingSeconds));
+    }
+
+    private Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isTimerRunning) {
+                seconds++;
+                updateTimerText();
+                handler.postDelayed(this, 1000);
+            }
+        }
+    };
 
     // Method to update UI with location values
     private void updateUI(double distance, long elapsedTimeMillis) {
@@ -170,24 +208,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void startTimer() {
-        final Handler handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (timerRunning) {
-                    // Calculate the elapsed time
-                    // Update the timer and distance every second
-                    handler.postDelayed(this, 1000);
-                }
-            }
-        });
-        timerRunning = true;
-    }
 
-    private void stopTimer() {
-        timerRunning = false;
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
