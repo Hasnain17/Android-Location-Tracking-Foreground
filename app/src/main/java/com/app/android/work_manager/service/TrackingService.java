@@ -18,7 +18,9 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
@@ -42,10 +44,20 @@ public class TrackingService extends Service {
     private double kmValue = 0.0;
     private long startTimeMillis;
 
+
+    private Handler handler;
+    private Runnable updateTimerRunnable;
+    private static final long TIMER_UPDATE_INTERVAL = 1000; // 1 second
+
+
     @Override
     public void onCreate() {
         super.onCreate();
         startForeground(NOTIFICATION_ID, createNotification());
+
+        handler = new Handler(Looper.getMainLooper());
+
+
 
         // Initialize location manager and listener
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -100,6 +112,24 @@ public class TrackingService extends Service {
                     0, // minDistance
                     locationListener);
         }
+
+
+        // Create a runnable to update the timer at regular intervals
+        updateTimerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateTimer();
+                handler.postDelayed(this, TIMER_UPDATE_INTERVAL);
+            }
+        };
+
+        // Start the timer update runnable
+        handler.postDelayed(updateTimerRunnable, TIMER_UPDATE_INTERVAL);
+    }
+
+    private void updateTimer() {
+        long elapsedTimeMillis = SystemClock.elapsedRealtime() - startTimeMillis;
+        broadcastLocationUpdate(kmValue, elapsedTimeMillis);
     }
 
     @Override
@@ -114,6 +144,9 @@ public class TrackingService extends Service {
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
+
+        // Remove the timer update runnable
+        handler.removeCallbacks(updateTimerRunnable);
     }
 
     // Method to broadcast location updates to the MainActivity

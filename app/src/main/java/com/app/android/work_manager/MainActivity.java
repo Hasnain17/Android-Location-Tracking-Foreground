@@ -1,45 +1,33 @@
 package com.app.android.work_manager;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.PowerManager;
-import android.os.SystemClock;
-import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.Locale;
-
-import android.content.Intent;
-
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
-import java.util.concurrent.TimeUnit;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import com.app.android.work_manager.service.TrackingService;
 import com.app.android.work_manager.worker.NotificationWorker;
+
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 /**
  * @Author: Muhammad Hasnain Altaf
  * @Date: 19/01/2024
@@ -53,9 +41,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String UPDATE_LOCATION_ACTION = "com.app.android.work_manager.UPDATE_LOCATION_ACTION";
 
-    private Handler handler;
-    private boolean isTimerRunning;
-    private int seconds;
 
 
     @Override
@@ -68,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         tvTime = findViewById(R.id.tvTime);
         tvKm = findViewById(R.id.tvKm);
 
-        handler = new Handler(Looper.getMainLooper());
+
 
         btnStartTracking.setOnClickListener(view -> startTracking());
 
@@ -140,9 +125,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        // Start a timer, update text views
-        startTimer();
-        
         callForPostNotificationPermission();
     }
 
@@ -159,42 +141,9 @@ public class MainActivity extends AppCompatActivity {
         stopService(new Intent(this, TrackingService.class));
         // Cancel the periodic work for notifications
         WorkManager.getInstance(this).cancelUniqueWork(NOTIFICATION_WORK_TAG);
-
-        // Implement the logic to stop tracking
-        // Stop the timer, update text views
-        stopTimer();
-    }
-    private void startTimer() {
-        if (!isTimerRunning) {
-            isTimerRunning = true;
-            seconds = 0;
-            updateTimerText();
-
-            handler.postDelayed(timerRunnable, 1000);
-        }
-    }
-    private void stopTimer() {
-        if (isTimerRunning) {
-            isTimerRunning = false;
-            handler.removeCallbacks(timerRunnable);
-        }
-    }
-    private void updateTimerText() {
-        int minutes = seconds / 60;
-        int remainingSeconds = seconds % 60;
-        tvTime.setText(String.format("Time: %02d:%02d", minutes, remainingSeconds));
     }
 
-    private Runnable timerRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (isTimerRunning) {
-                seconds++;
-                updateTimerText();
-                handler.postDelayed(this, 1000);
-            }
-        }
-    };
+
 
     // Method to update UI with location values
     private void updateUI(double distance, long elapsedTimeMillis) {
