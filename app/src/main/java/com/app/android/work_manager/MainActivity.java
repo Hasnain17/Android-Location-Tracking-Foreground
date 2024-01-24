@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnStartTracking, btnStopTracking;
-    private TextView tvTime, tvKm;
+    private TextView tvTime, tvKm,tvAverageSpeed;
 
     private static final String NOTIFICATION_WORK_TAG = "notificationWork";
 
@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         btnStopTracking = findViewById(R.id.btnStopTracking);
         tvTime = findViewById(R.id.tvTime);
         tvKm = findViewById(R.id.tvKm);
+        tvAverageSpeed = findViewById(R.id.tvAverageSpeed);
 
 
 
@@ -71,14 +72,16 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             double distance = intent.getDoubleExtra("distance", 0.0);
             long elapsedTimeMillis = intent.getLongExtra("elapsedTimeMillis", 0);
+            double averageSpeed = intent.getDoubleExtra("averageSpeed", 0.0);
 
             // Debugging statements
             Log.d("LocationUpdateReceiver", "Received location update");
             Log.d("LocationUpdateReceiver", "Distance: " + distance);
             Log.d("LocationUpdateReceiver", "Elapsed Time: " + elapsedTimeMillis);
+            Log.d("LocationUpdateReceiver", "Average Speed: " + averageSpeed);
 
             // Update UI with the new location values
-            updateUI(distance, elapsedTimeMillis);
+            updateUI(distance, elapsedTimeMillis, averageSpeed);
         }
     };
 
@@ -146,14 +149,14 @@ public class MainActivity extends AppCompatActivity {
 
 
     // Method to update UI with location values
-    private void updateUI(double distance, long elapsedTimeMillis) {
+    private void updateUI(double distance, long elapsedTimeMillis, double averageSpeed) {
         long minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis);
-        long seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) -
-                TimeUnit.MINUTES.toSeconds(minutes);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) - TimeUnit.MINUTES.toSeconds(minutes);
 
         runOnUiThread(() -> {
             tvTime.setText(String.format("Time: %02d:%02d", minutes, seconds));
             tvKm.setText(String.format(Locale.getDefault(), "%.1f km", distance));
+            tvAverageSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", averageSpeed));
         });
     }
 

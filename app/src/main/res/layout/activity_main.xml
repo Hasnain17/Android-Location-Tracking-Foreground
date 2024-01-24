@@ -38,4 +38,13 @@
         android:layout_below="@id/tvTime"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/tvAverageSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.0  km/h"
+        android:layout_below="@id/tvKm"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
 </RelativeLayout>

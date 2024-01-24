@@ -50,6 +50,11 @@ public class TrackingService extends Service {
     private static final long TIMER_UPDATE_INTERVAL = 1000; // 1 second
 
 
+    private double totalDistance = 0.0;
+    private long totalTimeMillis = 0;
+
+
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -68,7 +73,6 @@ public class TrackingService extends Service {
                     // First time getting a location, set it as the starting point
                     location1 = location;
                 } else {
-
                     // Calculate the distance between location1 and location
                     float[] results = new float[1];
                     Location.distanceBetween(
@@ -83,11 +87,17 @@ public class TrackingService extends Service {
                     double distanceInKm = distanceInMeters / 1000.0;
                     kmValue += distanceInKm;
 
+                    // Calculate total distance
+                    totalDistance += distanceInKm;
+
+                    // Calculate total time
+                    totalTimeMillis = SystemClock.elapsedRealtime() - startTimeMillis;
+
                     // Set location as the new starting point for the next calculation
                     location1 = location;
 
                     // Broadcast the updated location values to the MainActivity
-                    broadcastLocationUpdate(kmValue, SystemClock.elapsedRealtime() - startTimeMillis);
+                    broadcastLocationUpdate(kmValue, totalTimeMillis, totalDistance);
                 }
             }
 
@@ -129,8 +139,9 @@ public class TrackingService extends Service {
 
     private void updateTimer() {
         long elapsedTimeMillis = SystemClock.elapsedRealtime() - startTimeMillis;
-        broadcastLocationUpdate(kmValue, elapsedTimeMillis);
+        broadcastLocationUpdate(kmValue, elapsedTimeMillis, totalDistance);
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -149,11 +160,26 @@ public class TrackingService extends Service {
         handler.removeCallbacks(updateTimerRunnable);
     }
 
+
     // Method to broadcast location updates to the MainActivity
-    private void broadcastLocationUpdate(double distance, long elapsedTimeMillis) {
+/*    private void broadcastLocationUpdate(double distance, long elapsedTimeMillis, double totalDistance) {
+        double averageSpeed = (totalDistance / 1000) / (totalTimeMillis / (1000.0 * 60.0 * 60.0)); // Convert millis to hours
+
         Intent intent = new Intent(UPDATE_LOCATION_ACTION);
         intent.putExtra("distance", distance);
         intent.putExtra("elapsedTimeMillis", elapsedTimeMillis);
+        intent.putExtra("averageSpeed", averageSpeed);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }*/
+    private void broadcastLocationUpdate(double distance, long elapsedTimeMillis, double totalDistance) {
+        double elapsedTimeHours = elapsedTimeMillis / (1000.0 * 60.0 * 60.0); // Convert millis to hours
+
+        double averageSpeed = (totalDistance / elapsedTimeHours);
+
+        Intent intent = new Intent(UPDATE_LOCATION_ACTION);
+        intent.putExtra("distance", distance);
+        intent.putExtra("elapsedTimeMillis", elapsedTimeMillis);
+        intent.putExtra("averageSpeed", averageSpeed);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
