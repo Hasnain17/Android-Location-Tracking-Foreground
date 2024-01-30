@@ -73,22 +73,29 @@ public class TrackingService extends Service {
                     // First time getting a location, set it as the starting point
                     location1 = location;
                 } else {
-                    // Calculate the distance between location1 and location
-                    float[] results = new float[1];
-                    Location.distanceBetween(
-                            location1.getLatitude(), location1.getLongitude(),
-                            location.getLatitude(), location.getLongitude(),
-                            results);
+                    float distanceInMeters;
+                    float distanceInKilometers;
+                    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.P){
+                        distanceInMeters = location1.distanceTo(location);
+                     distanceInKilometers = distanceInMeters / 1000.0f;
+                    }
+                    else {
+                        // Calculate the distance between location1 and location
+                        float[] results = new float[1];
+                        Location.distanceBetween(
+                                location1.getLatitude(), location1.getLongitude(),
+                                location.getLatitude(), location.getLongitude(),
+                                results);
 
-                    // The distance is stored in results[0]
-                    float distanceInMeters = results[0];
+                        // The distance is stored in results[0]
+                        distanceInMeters = results[0];
+                        distanceInKilometers= (float) (distanceInMeters / 1000.0);
+                    }
 
-                    // Convert to kilometers
-                    double distanceInKm = distanceInMeters / 1000.0;
-                    kmValue += distanceInKm;
 
+                    kmValue += distanceInKilometers;
                     // Calculate total distance
-                    totalDistance += distanceInKm;
+                    totalDistance += distanceInKilometers;
 
                     // Calculate total time
                     totalTimeMillis = SystemClock.elapsedRealtime() - startTimeMillis;
@@ -100,6 +107,8 @@ public class TrackingService extends Service {
                     broadcastLocationUpdate(kmValue, totalTimeMillis, totalDistance);
                 }
             }
+
+
 
             @Override
             public void onProviderEnabled(@NonNull String provider) {
@@ -160,17 +169,6 @@ public class TrackingService extends Service {
         handler.removeCallbacks(updateTimerRunnable);
     }
 
-
-    // Method to broadcast location updates to the MainActivity
-/*    private void broadcastLocationUpdate(double distance, long elapsedTimeMillis, double totalDistance) {
-        double averageSpeed = (totalDistance / 1000) / (totalTimeMillis / (1000.0 * 60.0 * 60.0)); // Convert millis to hours
-
-        Intent intent = new Intent(UPDATE_LOCATION_ACTION);
-        intent.putExtra("distance", distance);
-        intent.putExtra("elapsedTimeMillis", elapsedTimeMillis);
-        intent.putExtra("averageSpeed", averageSpeed);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }*/
     private void broadcastLocationUpdate(double distance, long elapsedTimeMillis, double totalDistance) {
         double elapsedTimeHours = elapsedTimeMillis / (1000.0 * 60.0 * 60.0); // Convert millis to hours
 

@@ -1,0 +1,65 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Display Average Speed -->
+    <TextView
+        android:id="@+id/widgetAverageSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:fontFamily="monospace"
+        android:text="SPEED"
+        />
+
+    <!-- Display Distance Covered -->
+    <TextView
+        android:id="@+id/widgetDistanceCovered"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:fontFamily="monospace"
+        android:text="Distance"
+
+        />
+
+    <!-- Display Elapsed Time -->
+    <Chronometer
+        android:id="@+id/widgetChronometer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:format="Time: %s"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:fontFamily="monospace"
+       />
+
+    <!-- Start/Stop Tracking Button -->
+    <Button
+        android:id="@+id/widgetStartButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:textSize="12sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
+        />
+
+    <Button
+        android:id="@+id/widgetStopButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:textSize="12sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
+        />
+
+</LinearLayout>

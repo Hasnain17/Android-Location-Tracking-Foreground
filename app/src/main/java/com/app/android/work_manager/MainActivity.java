@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
         // Register the receiver for location updates
         LocalBroadcastManager.getInstance(this).registerReceiver(locationUpdateReceiver,
                 new IntentFilter(UPDATE_LOCATION_ACTION));
+
+        callForPostNotificationPermission();
     }
 
     // Receiver to handle location updates from the service
@@ -86,11 +89,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void startTracking() {
-
-        // Start the foreground service
-        startService(new Intent(this, TrackingService.class));
-
-
         // Check location permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -98,9 +96,20 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     1);
-            return;
         }
+        else {
+            callForTracking();
+        }
+    }
 
+
+
+
+
+
+    private void callForTracking() {
+        // Start the foreground service
+        startService(new Intent(this, TrackingService.class));
 
 
         // Schedule a periodic work for notifications every 15 minutes
@@ -127,8 +136,6 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, "WORK MANAGER CANCELED", Toast.LENGTH_SHORT).show();
                     }
                 });
-
-        callForPostNotificationPermission();
     }
 
     private void callForPostNotificationPermission() {
@@ -168,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, start tracking
-                startTracking();
+                callForTracking();
             } else {
                 Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
             }

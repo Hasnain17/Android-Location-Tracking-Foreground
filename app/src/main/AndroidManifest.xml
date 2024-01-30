@@ -28,10 +28,38 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+   <!--     <service
+            android:name=".service.TrackingService"
+            android:enabled="true"
+            android:exported="false" />-->
+
         <service
             android:name=".service.TrackingService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.app.android.work_manager.UPDATE_LOCATION_ACTION" />
+            </intent-filter>
+        </service>
+
+
+
+        <receiver
+            android:label="Test Widget"
+            android:name=".appWidget.TrackingWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.app.android.work_manager.START_TRACKING" />
+                <action android:name="com.app.android.work_manager.STOP_TRACKING" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+
+
     </application>
 
 </manifest>
