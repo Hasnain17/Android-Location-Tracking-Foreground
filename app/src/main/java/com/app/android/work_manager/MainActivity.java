@@ -106,11 +106,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
-
     private void callForTracking() {
         // Start the foreground service
         startService(new Intent(this, TrackingService.class));
@@ -133,11 +128,11 @@ public class MainActivity extends AppCompatActivity {
                 .observe(this, workInfo -> {
                     if (workInfo.getState() == WorkInfo.State.ENQUEUED) {
                         // Notification work is enqueued, update UI or start tracking logic here
-                        Toast.makeText(this, "WORK MANAGER START", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "SERVICE START", Toast.LENGTH_SHORT).show();
                     }
                     else if (workInfo.getState() == WorkInfo.State.CANCELLED)
                     {
-                        Toast.makeText(this, "WORK MANAGER CANCELED", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "SERVICE STOP", Toast.LENGTH_SHORT).show();
                     }
                 });
     }

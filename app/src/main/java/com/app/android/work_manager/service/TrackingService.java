@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -104,6 +105,10 @@ public class TrackingService extends Service {
 
                     // Broadcast the updated location values to the MainActivity
                     broadcastLocationUpdate(kmValue, totalTimeMillis, totalDistance);
+
+                    Log.d("LocationUpdateReceiverS", "Received location update | SERVICE CLASS");
+                    Log.d("LocationUpdateReceiverS", "Distance: " + totalDistance);
+                    Log.d("LocationUpdateReceiverS", "Elapsed Time: " + totalTimeMillis);
                 }
             }
 
