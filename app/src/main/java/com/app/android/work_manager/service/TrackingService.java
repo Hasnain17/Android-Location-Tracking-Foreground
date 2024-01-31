@@ -60,12 +60,11 @@ public class TrackingService extends Service {
         super.onCreate();
         startForeground(NOTIFICATION_ID, createNotification());
 
-        handler = new Handler(Looper.getMainLooper());
-
-
-
         // Initialize location manager and listener
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+
+
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
@@ -123,16 +122,18 @@ public class TrackingService extends Service {
         startTimeMillis = SystemClock.elapsedRealtime();
 
         // Request location updates
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+        if (locationManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Request location updates
             locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
-                    0, // minTime
-                    0, // minDistance
+                    0,         // (time interval)
+                    0,       // (distance interval)
                     locationListener);
         }
 
 
+        handler = new Handler(Looper.getMainLooper());
         // Create a runnable to update the timer at regular intervals
         updateTimerRunnable = new Runnable() {
             @Override
@@ -221,7 +222,7 @@ public class TrackingService extends Service {
 
             notificationManager.notify(NOTIFICATION_ID, notification);
         } else {
-            notification = new NotificationCompat.Builder(this)
+            notification = new NotificationCompat.Builder(this,"newNotification")
                     .setContentIntent(pendingIntent)
                     .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                     .setSmallIcon(R.mipmap.ic_logo_new) // Set your notification icon

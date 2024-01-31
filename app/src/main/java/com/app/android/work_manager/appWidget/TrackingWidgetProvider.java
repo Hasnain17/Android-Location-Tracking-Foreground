@@ -37,15 +37,13 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
     }
 
     private static void setButtonClickListeners(Context context, RemoteViews views, int appWidgetId) {
-
-
-// Start Tracking Button
+        // Start Tracking Button
         Intent startTrackingIntent = new Intent(context, TrackingWidgetProvider.class);
         startTrackingIntent.setAction(ACTION_START_TRACKING);
         PendingIntent startTrackingPendingIntent = PendingIntent.getBroadcast(context, 0, startTrackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.widgetStartButton, startTrackingPendingIntent);
 
-// Stop Tracking Button
+        // Stop Tracking Button
         Intent stopTrackingIntent = new Intent(context, TrackingWidgetProvider.class);
         stopTrackingIntent.setAction(ACTION_STOP_TRACKING);
         PendingIntent stopTrackingPendingIntent = PendingIntent.getBroadcast(context, 1, stopTrackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);

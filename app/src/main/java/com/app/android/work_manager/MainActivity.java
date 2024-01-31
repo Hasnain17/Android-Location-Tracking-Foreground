@@ -42,6 +42,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String UPDATE_LOCATION_ACTION = "com.app.android.work_manager.UPDATE_LOCATION_ACTION";
 
+    private static final String DISTANCE_FORMAT = "%.1f km";
+    private static final String SPEED_FORMAT = "%.1f km/h";
+
+    private static final String TIME_FORMAT = "Time: %02d:%02d";
 
 
     @Override
@@ -161,10 +165,19 @@ public class MainActivity extends AppCompatActivity {
         long seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) - TimeUnit.MINUTES.toSeconds(minutes);
 
         runOnUiThread(() -> {
-            tvTime.setText(String.format("Time: %02d:%02d", minutes, seconds));
-            tvKm.setText(String.format(Locale.getDefault(), "%.1f km", distance));
-            tvAverageSpeed.setText(String.format(Locale.getDefault(), "%.1f km/h", averageSpeed));
+            if (tvTime != null) {
+                tvTime.setText(String.format(Locale.getDefault(),TIME_FORMAT, minutes, seconds));
+            }
+
+            if (tvKm != null) {
+                tvKm.setText(String.format(Locale.getDefault(), DISTANCE_FORMAT, distance));
+            }
+
+            if (tvAverageSpeed != null) {
+                tvAverageSpeed.setText(String.format(Locale.getDefault(), SPEED_FORMAT, averageSpeed));
+            }
         });
+
     }
 
 
