@@ -66,11 +66,22 @@ public class MainActivity extends AppCompatActivity {
         btnStopTracking.setOnClickListener(view -> stopTracking());
 
 
+        callForPostNotificationPermission();
+    }
+
+    @Override
+    protected void onResume() {
         // Register the receiver for location updates
         LocalBroadcastManager.getInstance(this).registerReceiver(locationUpdateReceiver,
                 new IntentFilter(UPDATE_LOCATION_ACTION));
+        super.onResume();
+    }
 
-        callForPostNotificationPermission();
+    @Override
+    protected void onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(locationUpdateReceiver);
+
+        super.onPause();
     }
 
     // Receiver to handle location updates from the service
@@ -193,7 +204,5 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Unregister the receiver when the activity is destroyed
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(locationUpdateReceiver);
     }
 }
