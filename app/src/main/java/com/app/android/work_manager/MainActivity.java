@@ -133,19 +133,6 @@ public class MainActivity extends AppCompatActivity {
                         NOTIFICATION_WORK_TAG,
                         ExistingPeriodicWorkPolicy.REPLACE,
                         periodicWorkRequest);
-
-        // Observe the work status to open the activity with the timer on notification click
-        WorkManager.getInstance(this).getWorkInfoByIdLiveData(periodicWorkRequest.getId())
-                .observe(this, workInfo -> {
-                    if (workInfo.getState() == WorkInfo.State.ENQUEUED) {
-                        // Notification work is enqueued, update UI or start tracking logic here
-                        Toast.makeText(this, "SERVICE START", Toast.LENGTH_SHORT).show();
-                    }
-                    else if (workInfo.getState() == WorkInfo.State.CANCELLED)
-                    {
-                        Toast.makeText(this, "SERVICE STOP", Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 
     private void callForPostNotificationPermission() {
