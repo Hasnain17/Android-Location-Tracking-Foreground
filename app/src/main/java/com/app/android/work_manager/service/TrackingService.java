@@ -31,8 +31,11 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.app.android.work_manager.MainActivity;
 import com.app.android.work_manager.R;
 import com.app.android.work_manager.utils.BitmapUtils;
+import com.google.android.gms.location.FusedLocationProviderClient;
 
 public class TrackingService extends Service {
+
+
 
     private static final int NOTIFICATION_ID = 100;
 
@@ -108,8 +111,9 @@ public class TrackingService extends Service {
                     broadcastLocationUpdate(kmValue, totalTimeMillis, totalDistance);
 
                     Log.d("LocationUpdateReceiverS", "Received location update | SERVICE CLASS");
-                    Log.d("LocationUpdateReceiverS", "Distance: " + totalDistance);
                     Log.d("LocationUpdateReceiverS", "Elapsed Time: " + totalTimeMillis);
+                    Log.d("LocationUpdateReceiverS", "Distance: " + totalDistance);
+
                 }
             }
 

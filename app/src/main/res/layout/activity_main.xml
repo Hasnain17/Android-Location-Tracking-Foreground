@@ -47,4 +47,25 @@
         android:layout_below="@id/tvKm"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"/>
+
+
+
+    <TextView
+        android:id="@+id/tvLat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Latitude: "
+        android:layout_below="@id/tvAverageSpeed"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
+
+
+    <TextView
+        android:id="@+id/tvLng"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Longitude: "
+        android:layout_below="@id/tvLat"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
 </RelativeLayout>

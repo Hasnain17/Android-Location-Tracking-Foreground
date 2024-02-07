@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +15,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,9 +27,14 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import com.app.android.work_manager.data.LocationEvent;
+import com.app.android.work_manager.service.LocationService;
 import com.app.android.work_manager.service.TrackingService;
 
 import com.app.android.work_manager.worker.NotificationWorker;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -37,11 +45,9 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnStartTracking, btnStopTracking;
-    private TextView tvTime, tvKm,tvAverageSpeed;
+    private TextView tvTime, tvKm,tvAverageSpeed,tvLat,tvLng;
 
     private static final String NOTIFICATION_WORK_TAG = "notificationWork";
-
-    private static final String UPDATE_LOCATION_ACTION = "com.app.android.work_manager.UPDATE_LOCATION_ACTION";
 
     private static final String DISTANCE_FORMAT = "%.1f km";
     private static final String SPEED_FORMAT = "%.1f km/h";
@@ -49,9 +55,35 @@ public class MainActivity extends AppCompatActivity {
     private static final String TIME_FORMAT = "Time: %02d:%02d";
 
 
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    private static final int BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE = 2;
+    private final ActivityResultLauncher<String> backgroundLocationLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
+        if (result) {
+            // Permission granted, do something if needed
+            callForTracking();
 
+        }
+    });
+
+
+    private final ActivityResultLauncher<String[]> locationPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), permissions -> {
+        if (Boolean.TRUE.equals(permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false))) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    backgroundLocationLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+                }
+            }
+        }
+    });
+
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                locationPermissionsLauncher.launch(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION});
+            } else {
+                callForTracking();
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,107 +95,30 @@ public class MainActivity extends AppCompatActivity {
         tvTime = findViewById(R.id.tvTime);
         tvKm = findViewById(R.id.tvKm);
         tvAverageSpeed = findViewById(R.id.tvAverageSpeed);
+        tvLat=findViewById(R.id.tvLat);
+        tvLng=findViewById(R.id.tvLng);
 
-
-
-        btnStartTracking.setOnClickListener(view -> startTracking());
+        btnStartTracking.setOnClickListener(view -> checkPermissions());
 
         btnStopTracking.setOnClickListener(view -> stopTracking());
-
 
         callForPostNotificationPermission();
     }
 
-    private void callForBackgroundLocation() {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Allow location access all the time?")
-                .setPositiveButton("Yes", (dialog, id) -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        intent.setData(Uri.parse("package:" + getPackageName()));
-                        startActivity(intent);
-
-                    }
-                    dialog.dismiss();
-                })
-                .setNegativeButton("No", (dialog, id) -> dialog.dismiss());
-        builder.create().show();
-
-    }
 
     @Override
-    protected void onResume() {
-        // Register the receiver for location updates
-        LocalBroadcastManager.getInstance(this).registerReceiver(locationUpdateReceiver,
-                new IntentFilter(UPDATE_LOCATION_ACTION));
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(locationUpdateReceiver);
-
-        super.onPause();
-    }
-
-    // Receiver to handle location updates from the service
-    private final BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            double distance = intent.getDoubleExtra("distance", 0.0);
-            long elapsedTimeMillis = intent.getLongExtra("elapsedTimeMillis", 0);
-            double averageSpeed = intent.getDoubleExtra("averageSpeed", 0.0);
-
-            // Debugging statements
-            Log.d("LocationUpdateReceiver", "Received location update");
-            Log.d("LocationUpdateReceiver", "Distance: " + distance);
-            Log.d("LocationUpdateReceiver", "Elapsed Time: " + elapsedTimeMillis);
-            Log.d("LocationUpdateReceiver", "Average Speed: " + averageSpeed);
-
-            // Update UI with the new location values
-            updateUI(distance, elapsedTimeMillis, averageSpeed);
-        }
-    };
-
-    private void startTracking() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED){
-                callForBackgroundLocation();
-            }
-            else {
-                // Check location permission
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    // Request location permission
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                            LOCATION_PERMISSION_REQUEST_CODE);
-                }
-                else {
-                    callForTracking();
-                }
-            }
-        }
-        else {
-            // Check location permission
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-                // Request location permission
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_PERMISSION_REQUEST_CODE);
-            }
-            else {
-                callForTracking();
-            }
+    protected void onStart() {
+        super.onStart();
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this);
         }
     }
+
+
 
     private void callForTracking() {
         // Start the foreground service
-        startService(new Intent(this, TrackingService.class));
+        startService(new Intent(this, LocationService.class));
 
 
 
@@ -190,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopTracking() {
         // Stop the foreground service
-        stopService(new Intent(this, TrackingService.class));
+        stopService(new Intent(this, LocationService.class));
 
         // Cancel the periodic work for notifications
         WorkManager.getInstance(this).cancelUniqueWork(NOTIFICATION_WORK_TAG);
@@ -221,21 +176,24 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, start tracking
-                callForTracking();
-            } else {
-                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+//        stopService(new Intent(this, LocationService.class));
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this);
+        }
     }
-}
+
+    @Subscribe
+    public void receiveLocationEvent(LocationEvent locationEvent) {
+        tvLat.setText("Latitude -> " + locationEvent.getLocation().getLatitude());
+        tvLng.setText("Longitude -> " + locationEvent.getLocation().getLongitude());
+
+        tvKm.setText(String.format(Locale.getDefault(), DISTANCE_FORMAT, locationEvent.getTotalDistance()));
+        }
+    }
+
+
