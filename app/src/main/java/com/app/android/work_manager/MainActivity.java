@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,17 +15,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import com.app.android.work_manager.service.TrackingService;
+
 import com.app.android.work_manager.worker.NotificationWorker;
 
 import java.util.Locale;
@@ -48,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TIME_FORMAT = "Time: %02d:%02d";
 
 
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE = 2;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +72,24 @@ public class MainActivity extends AppCompatActivity {
 
 
         callForPostNotificationPermission();
+    }
+
+    private void callForBackgroundLocation() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Allow location access all the time?")
+                .setPositiveButton("Yes", (dialog, id) -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setData(Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+
+                    }
+                    dialog.dismiss();
+                })
+                .setNegativeButton("No", (dialog, id) -> dialog.dismiss());
+        builder.create().show();
+
     }
 
     @Override
@@ -104,22 +127,44 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void startTracking() {
-        // Check location permission
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Request location permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    1);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED){
+                callForBackgroundLocation();
+            }
+            else {
+                // Check location permission
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    // Request location permission
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            LOCATION_PERMISSION_REQUEST_CODE);
+                }
+                else {
+                    callForTracking();
+                }
+            }
         }
         else {
-            callForTracking();
+            // Check location permission
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Request location permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            }
+            else {
+                callForTracking();
+            }
         }
     }
 
     private void callForTracking() {
         // Start the foreground service
         startService(new Intent(this, TrackingService.class));
+
 
 
         // Schedule a periodic work for notifications every 15 minutes
@@ -146,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
     private void stopTracking() {
         // Stop the foreground service
         stopService(new Intent(this, TrackingService.class));
+
         // Cancel the periodic work for notifications
         WorkManager.getInstance(this).cancelUniqueWork(NOTIFICATION_WORK_TAG);
     }
@@ -178,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, start tracking
                 callForTracking();

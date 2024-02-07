@@ -28,19 +28,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-   <!--     <service
-            android:name=".service.TrackingService"
-            android:enabled="true"
-            android:exported="false" />-->
+
 
         <service
             android:name=".service.TrackingService"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.app.android.work_manager.UPDATE_LOCATION_ACTION" />
-            </intent-filter>
-        </service>
+            android:foregroundServiceType="location"
+            android:exported="false"/>
 
 
 

@@ -39,6 +39,7 @@ public class TrackingService extends Service {
     private LocationManager locationManager;
     private LocationListener locationListener;
 
+
     private Location location1;
     private static final String UPDATE_LOCATION_ACTION = "com.app.android.work_manager.UPDATE_LOCATION_ACTION";
 
