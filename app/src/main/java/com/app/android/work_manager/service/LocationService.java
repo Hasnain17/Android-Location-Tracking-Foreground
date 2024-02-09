@@ -44,8 +44,6 @@ public class LocationService extends Service {
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
 
-
-
     private Location location;
 
     private Location location1;
@@ -54,10 +52,6 @@ public class LocationService extends Service {
 
     private long totalTimeMillis = 0;
     private long startTimeMillis;
-
-
-
-
 
 
     @Override

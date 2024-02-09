@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -43,34 +44,40 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TIME_FORMAT = "Time: %02d:%02d";
 
+    private static final String latPlaceholder="Latitude -> ";
+    private  static final String logPlaceholder="Longitude -> ";
+    private  static final String distancePlaceholder="Distance -> ";
+    private  static final String averagePlaceholder="Average Speed -> ";
+
 
     private final ActivityResultLauncher<String> backgroundLocationLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
         if (result) {
             // Permission granted, do something if needed
             callForTracking();
-
         }
     });
 
-
     private final ActivityResultLauncher<String[]> locationPermissionsLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), permissions -> {
-        if (Boolean.TRUE.equals(permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false))) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    backgroundLocationLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (Boolean.TRUE.equals(permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false))) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+                    }
                 }
             }
+        }
+        else {
+            backgroundLocationLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
     });
 
     private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                locationPermissionsLauncher.launch(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION});
-            } else {
-                callForTracking();
-            }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            locationPermissionsLauncher.launch(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
+        } else {
+            callForTracking();
         }
     }
 
@@ -107,8 +114,6 @@ public class MainActivity extends AppCompatActivity {
     private void callForTracking() {
         // Start the foreground service
         startService(new Intent(this, LocationService.class));
-
-
 
         // Schedule a periodic work for notifications every 15 minutes
         PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(NotificationWorker.class, 2, TimeUnit.MINUTES)
@@ -150,14 +155,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe
     public void receiveLocationEvent(LocationEvent locationEvent) {
-        tvLat.setText("Latitude -> " + locationEvent.getLocation().getLatitude());
-        tvLng.setText("Longitude -> " + locationEvent.getLocation().getLongitude());
 
-        tvKm.setText(String.format(Locale.getDefault(), DISTANCE_FORMAT, locationEvent.getTotalDistance()));
+        tvLat.setText(latPlaceholder.concat(String.valueOf(locationEvent.getLocation().getLatitude())));
+        tvLng.setText(logPlaceholder.concat(String.valueOf(locationEvent.getLocation().getLongitude())));
+
+        tvKm.setText(String.format(distancePlaceholder.concat(String.format(Locale.getDefault(), DISTANCE_FORMAT, locationEvent.getTotalDistance()))));
 
         if (locationEvent.getAverageSpeed()>10.0){
             //Just for temp purposes, In our we will just send the average in parameter of API POST REQUEST.......
-            tvAverageSpeed.setText(String.format(Locale.getDefault(), SPEED_FORMAT, locationEvent.getAverageSpeed()));
+            tvAverageSpeed.setText(averagePlaceholder.concat(String.format(Locale.getDefault(), SPEED_FORMAT, locationEvent.getAverageSpeed())));
         }
 
         long minutes = TimeUnit.MILLISECONDS.toMinutes(locationEvent.getTotalTime());
