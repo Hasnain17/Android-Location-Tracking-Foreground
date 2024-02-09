@@ -18,6 +18,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 
 import androidx.core.app.NotificationCompat;
@@ -50,6 +51,15 @@ public class LocationService extends Service {
     private Location location1;
 
     private double kmValue = 0.0;
+
+    private long totalTimeMillis = 0;
+    private long startTimeMillis;
+
+
+
+
+
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -69,6 +79,9 @@ public class LocationService extends Service {
         };
 
         startForeground(NOTIFICATION_ID, createNotification());
+
+
+        startTimeMillis = SystemClock.elapsedRealtime();
     }
 
     @Override
@@ -118,19 +131,22 @@ public class LocationService extends Service {
             }
             kmValue += distanceInKilometers;
 
+            // Calculate total time
+            totalTimeMillis = SystemClock.elapsedRealtime() - startTimeMillis;
 
-            EventBus.getDefault().post(new LocationEvent(
-                    location.getLatitude(),
-                    location.getLongitude(),
-                    location, kmValue));
-
+            callForTransaction(location,kmValue,totalTimeMillis);
         }
         location1=location;
     }
 
+    private void callForTransaction(Location location, double kmValue, long totalTimeMillis) {
+        double elapsedTimeHours = totalTimeMillis / (1000.0 * 60.0 * 60.0); // Convert millis to hours
 
+        double averageSpeed = (kmValue / elapsedTimeHours);
 
-
+        EventBus.getDefault().post(new LocationEvent(
+                location, kmValue,averageSpeed,totalTimeMillis));
+    }
 
     @Override
     public IBinder onBind(Intent intent) {

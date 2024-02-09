@@ -1,35 +1,24 @@
 package com.app.android.work_manager;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.app.android.work_manager.data.LocationEvent;
 import com.app.android.work_manager.service.LocationService;
-import com.app.android.work_manager.service.TrackingService;
 
 import com.app.android.work_manager.worker.NotificationWorker;
 
@@ -115,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     private void callForTracking() {
         // Start the foreground service
         startService(new Intent(this, LocationService.class));
@@ -151,33 +139,6 @@ public class MainActivity extends AppCompatActivity {
         WorkManager.getInstance(this).cancelUniqueWork(NOTIFICATION_WORK_TAG);
     }
 
-
-
-    // Method to update UI with location values
-    private void updateUI(double distance, long elapsedTimeMillis, double averageSpeed) {
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis);
-        long seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) - TimeUnit.MINUTES.toSeconds(minutes);
-
-        runOnUiThread(() -> {
-            if (tvTime != null) {
-                tvTime.setText(String.format(Locale.getDefault(),TIME_FORMAT, minutes, seconds));
-            }
-
-            if (tvKm != null) {
-                tvKm.setText(String.format(Locale.getDefault(), DISTANCE_FORMAT, distance));
-            }
-
-            if (tvAverageSpeed != null) {
-                tvAverageSpeed.setText(String.format(Locale.getDefault(), SPEED_FORMAT, averageSpeed));
-            }
-        });
-
-    }
-
-
-
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -193,7 +154,17 @@ public class MainActivity extends AppCompatActivity {
         tvLng.setText("Longitude -> " + locationEvent.getLocation().getLongitude());
 
         tvKm.setText(String.format(Locale.getDefault(), DISTANCE_FORMAT, locationEvent.getTotalDistance()));
+
+        if (locationEvent.getAverageSpeed()>10.0){
+            //Just for temp purposes, In our we will just send the average in parameter of API POST REQUEST.......
+            tvAverageSpeed.setText(String.format(Locale.getDefault(), SPEED_FORMAT, locationEvent.getAverageSpeed()));
         }
+
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(locationEvent.getTotalTime());
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(locationEvent.getTotalTime()) - TimeUnit.MINUTES.toSeconds(minutes);
+
+        tvTime.setText(String.format(Locale.getDefault(),TIME_FORMAT, minutes, seconds));
     }
+}
 
 

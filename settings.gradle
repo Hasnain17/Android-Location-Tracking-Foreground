@@ -13,5 +13,5 @@ dependencyResolutionManagement {
         maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "WORK-MANAGER"
+rootProject.name = "Foreground Location Tracking Hasnain"
 include ':app'

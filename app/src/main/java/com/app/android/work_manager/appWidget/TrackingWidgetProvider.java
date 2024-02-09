@@ -9,7 +9,7 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import com.app.android.work_manager.R;
-import com.app.android.work_manager.service.TrackingService;
+import com.app.android.work_manager.service.LocationService;
 
 /**
  * @Author: Muhammad Hasnain Altaf
@@ -67,13 +67,13 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
 
     private void startTrackingService(Context context) {
         // Start the tracking service
-        Intent serviceIntent = new Intent(context, TrackingService.class);
+        Intent serviceIntent = new Intent(context, LocationService.class);
         context.startService(serviceIntent);
     }
 
     private void stopTrackingService(Context context) {
         // Stop the tracking service
-        Intent serviceIntent = new Intent(context, TrackingService.class);
+        Intent serviceIntent = new Intent(context, LocationService.class);
         context.stopService(serviceIntent);
     }
 }

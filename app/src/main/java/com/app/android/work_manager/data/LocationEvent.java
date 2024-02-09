@@ -7,8 +7,7 @@ import android.location.Location;
  * @Date: 07/02/2024
  */
 public class LocationEvent {
-    private Double latitude;
-    private Double longitude;
+
 
     private Double averageSpeed;
     private Double totalDistance;
@@ -17,11 +16,11 @@ public class LocationEvent {
     private Location location;
 
 
-    public LocationEvent(Double latitude, Double longitude, Location location,Double totalDistance) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+    public LocationEvent(Location location,Double totalDistance,Double averageSpeed,long totalTime) {
         this.totalDistance=totalDistance;
         this.location = location;
+        this.averageSpeed=averageSpeed;
+        this.totalTime=totalTime;
     }
 
     public Double getTotalDistance() {
@@ -40,21 +39,19 @@ public class LocationEvent {
         this.location = location;
     }
 
-    public Double getLatitude() {
-        return latitude;
+    public Double getAverageSpeed() {
+        return averageSpeed;
     }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
+    public void setAverageSpeed(Double averageSpeed) {
+        this.averageSpeed = averageSpeed;
     }
 
-    public Double getLongitude() {
-        return longitude;
+    public long getTotalTime() {
+        return totalTime;
     }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
+    public void setTotalTime(long totalTime) {
+        this.totalTime = totalTime;
     }
-
-
 }
