@@ -11,6 +11,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Icon;
@@ -150,7 +151,13 @@ public class LocationService extends Service {
 
 
     private Notification createNotification() {
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        NotificationManager notificationManager;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            notificationManager = getSystemService(NotificationManager.class);
+        } else {
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        }
+
         // Create a notification channel for Android 8.0 (Oreo) and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("newNotification", "NotificationForFuelTrack", NotificationManager.IMPORTANCE_HIGH);

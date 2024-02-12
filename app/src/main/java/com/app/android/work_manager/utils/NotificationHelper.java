@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Icon;
 import android.os.Build;
+import android.app.Service;
 
 import androidx.core.app.NotificationCompat;
 
@@ -27,6 +28,20 @@ public class NotificationHelper {
     private static final int NOTIFICATION_ID = 1;
 
     public  void showNotification(Context context, String title, String content) {
+        NotificationManager notificationManager;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            notificationManager = context.getSystemService(NotificationManager.class);
+        } else {
+            notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        }
+
+
+        // Create a notification channel for Android 8.0 (Oreo) and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel("newNotification", "NotificationForFuelTrack", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("NotificationForFuelTrack");
+            notificationManager.createNotificationChannel(channel);
+        }
 
         Intent intent = new Intent(context.getApplicationContext(), MainActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
@@ -38,16 +53,6 @@ public class NotificationHelper {
                 1,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-
-        NotificationManager notificationManager;
-        notificationManager = context.getSystemService(NotificationManager.class);
-        // Create a notification channel for Android 8.0 (Oreo) and above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("newNotification", "NotificationForFuelTrack", NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription("NotificationForFuelTrack");
-            notificationManager.createNotificationChannel(channel);
-        }
 
         BitmapUtils bitmapUtils=new BitmapUtils();
         Bitmap bitmapBadge = bitmapUtils.vectorToBitmap(context, R.drawable.ic_logo_splash_new);
